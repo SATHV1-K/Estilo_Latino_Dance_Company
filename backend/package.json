@@ -1,0 +1,51 @@
+{
+    "name": "estilo-latino-backend",
+    "version": "1.0.0",
+    "description": "Backend API for Estilo Latino Dance Studio",
+    "main": "dist/index.js",
+    "scripts": {
+        "dev": "tsx watch src/index.ts",
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "db:migrate": "tsx src/database/migrate.ts",
+        "db:seed": "tsx src/database/seed.ts"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.39.0",
+        "@types/cookie-parser": "^1.4.10",
+        "@types/nodemailer": "^7.0.4",
+        "@types/pdfkit": "^0.17.4",
+        "bcryptjs": "^2.4.3",
+        "cookie-parser": "^1.4.7",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "express-rate-limit": "^7.1.5",
+        "helmet": "^7.1.0",
+        "jsonwebtoken": "^9.0.2",
+        "node-cron": "^3.0.3",
+        "nodemailer": "^7.0.11",
+        "pdfkit": "^0.14.0",
+        "qrcode": "^1.5.3",
+        "resend": "^2.1.0",
+        "square": "^35.1.0",
+        "twilio": "^4.20.0",
+        "uuid": "^9.0.1",
+        "zod": "^3.22.4"
+    },
+    "devDependencies": {
+        "@types/bcryptjs": "^2.4.6",
+        "@types/cors": "^2.8.17",
+        "@types/express": "^4.17.21",
+        "@types/jsonwebtoken": "^9.0.5",
+        "@types/node": "^20.10.0",
+        "@types/node-cron": "^3.0.11",
+        "@types/qrcode": "^1.5.5",
+        "@types/uuid": "^9.0.7",
+        "tsx": "^4.6.0",
+        "typescript": "^5.3.2"
+    },
+    "engines": {
+        "node": ">=18.0.0"
+    }
+}

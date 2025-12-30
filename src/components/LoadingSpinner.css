@@ -1,0 +1,119 @@
+/* Loading Spinner with Dancing Emoji Animation */
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.loading-spinner--fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+}
+
+.loading-spinner__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.loading-spinner__dancers {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.loading-spinner__emoji {
+  font-size: 3rem;
+  display: inline-block;
+}
+
+.loading-spinner__emoji--left {
+  animation: danceLeft 1s ease-in-out infinite;
+}
+
+.loading-spinner__emoji--right {
+  animation: danceRight 1s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+@keyframes danceLeft {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(-10deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-10px) rotate(10deg);
+  }
+}
+
+@keyframes danceRight {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(10deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-10px) rotate(-10deg);
+  }
+}
+
+.loading-spinner__message {
+  color: var(--color-gold, #ffc700);
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.loading-spinner__dots {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.loading-spinner__dot {
+  width: 8px;
+  height: 8px;
+  background: var(--color-gold, #ffc700);
+  border-radius: 50%;
+  animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.loading-spinner__dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.loading-spinner__dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-spinner__dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes dotPulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
