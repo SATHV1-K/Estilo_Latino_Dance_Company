@@ -142,7 +142,9 @@ export const PaymentScreen: React.FC<PaymentScreenProps> = ({
                             <div className="flex justify-between items-center">
                                 <span className="text-gray-700">{selectedCard.name}</span>
                                 <span className="text-brand-black font-medium">
-                                    {selectedCard.classes} classes
+                                    {selectedCard.cardCategory === 'subscription'
+                                        ? 'Unlimited Classes'
+                                        : `${selectedCard.classes} classes`}
                                 </span>
                             </div>
 

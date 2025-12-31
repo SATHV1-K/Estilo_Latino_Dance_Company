@@ -13,6 +13,7 @@ interface CardTypeApi {
   price_per_class: number;
   description: string | null;
   is_active: boolean;
+  card_category?: 'punch_card' | 'subscription';
 }
 
 interface PunchCardApi {
@@ -44,12 +45,14 @@ function mapApiCardToOption(card: CardTypeApi): PunchCardOption {
     price: isNaN(price) ? 0 : price,
     pricePerClass: isNaN(pricePerClass) ? 0 : pricePerClass,
     description: card.description || '',
+    cardCategory: card.card_category || 'punch_card',
   };
 }
 
 function mapApiPunchCard(card: PunchCardApi): PunchCard {
+  // Get today's date in local timezone (not UTC)
   const now = new Date();
-  const expDate = new Date(card.expiration_date);
+  const todayStr = now.toLocaleDateString('en-CA'); // Format: YYYY-MM-DD in local timezone
 
   return {
     id: card.id,
@@ -62,7 +65,8 @@ function mapApiPunchCard(card: PunchCardApi): PunchCard {
     price: Number(card.amount_paid),
     pricePerClass: card.card_type ? Number(card.card_type.price_per_class) : 0,
     isActive: card.status === 'active',
-    isExpired: card.status === 'expired' || expDate < now,
+    // Compare date strings to avoid timezone issues - card expires at END of expiration day
+    isExpired: card.status === 'expired' || card.expiration_date < todayStr,
   };
 }
 

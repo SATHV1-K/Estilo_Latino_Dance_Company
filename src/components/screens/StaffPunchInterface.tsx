@@ -452,9 +452,13 @@ export function StaffPunchInterface() {
                             <div className="bg-gray-900 rounded-lg p-4 border border-gray-700">
                               <p className="text-brand-white mb-2">{userCard.name}</p>
                               <div className="flex justify-between text-sm">
-                                <span className="text-gray-400">Remaining</span>
+                                <span className="text-gray-400">
+                                  {userCard.totalClasses === 0 ? 'Status' : 'Remaining'}
+                                </span>
                                 <span className="text-brand-yellow">
-                                  {userCard.classesRemaining} of {userCard.totalClasses} classes
+                                  {userCard.totalClasses === 0
+                                    ? '1 Month • Class Pass'
+                                    : `${userCard.classesRemaining} of ${userCard.totalClasses} classes`}
                                 </span>
                               </div>
                               <div className="flex justify-between text-sm mt-1">
@@ -464,25 +468,38 @@ export function StaffPunchInterface() {
                             </div>
                           </div>
 
-                          {/* Punch Button */}
-                          <Button
-                            variant="primary"
-                            onClick={handlePunchCard}
-                            disabled={loading || userCard.classesRemaining <= 0 || userCard.isExpired}
-                            className="text-lg h-14"
-                          >
-                            {userCard.isExpired
-                              ? 'Card Expired'
-                              : userCard.classesRemaining <= 0
-                                ? 'No Classes Remaining'
-                                : 'Punch Card - Check In'}
-                          </Button>
+                          {/* Punch Button - Subscription cards (totalClasses=0) have unlimited check-ins */}
+                          {(() => {
+                            const isSubscription = userCard.totalClasses === 0;
+                            const canCheckIn = isSubscription
+                              ? !userCard.isExpired  // Subscriptions: just check not expired
+                              : !userCard.isExpired && userCard.classesRemaining > 0; // Punch cards: need remaining classes
 
-                          {(userCard.classesRemaining <= 0 || userCard.isExpired) && (
-                            <p className="text-red-400 text-sm text-center">
-                              Customer needs to purchase a new card
-                            </p>
-                          )}
+                            return (
+                              <>
+                                <Button
+                                  variant="primary"
+                                  onClick={handlePunchCard}
+                                  disabled={loading || !canCheckIn}
+                                  className="text-lg h-14"
+                                >
+                                  {userCard.isExpired
+                                    ? 'Card Expired'
+                                    : !canCheckIn
+                                      ? 'No Classes Remaining'
+                                      : isSubscription
+                                        ? 'Check In - Unlimited'
+                                        : 'Punch Card - Check In'}
+                                </Button>
+
+                                {!canCheckIn && (
+                                  <p className="text-red-400 text-sm text-center">
+                                    Customer needs to purchase a new card
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
                         </>
                       ) : (
                         <div className="text-center py-6">

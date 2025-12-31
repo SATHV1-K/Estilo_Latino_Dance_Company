@@ -56,6 +56,8 @@ export interface FamilyMember {
 export type CardStatus = 'active' | 'expired' | 'exhausted';
 export type PaymentMethod = 'online' | 'cash' | 'admin_created';
 
+export type CardCategory = 'punch_card' | 'subscription';
+
 export interface CardType {
     id: string;
     name: string;
@@ -65,6 +67,7 @@ export interface CardType {
     price_per_class: number;
     description: string | null;
     is_active: boolean;
+    card_category: CardCategory;
     created_at: string;
 }
 

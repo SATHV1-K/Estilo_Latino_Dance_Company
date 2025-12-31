@@ -30,8 +30,11 @@ export function CustomerDashboard({
   onViewHistory
 }: CustomerDashboardProps) {
   const calculateDaysUntilExpiration = (expirationDate: string) => {
+    // Parse date string directly to avoid timezone shifting
+    const [year, month, day] = expirationDate.split('-').map(Number);
+    const expiry = new Date(year, month - 1, day); // month is 0-indexed
     const today = new Date();
-    const expiry = new Date(expirationDate);
+    today.setHours(0, 0, 0, 0); // Start of today for accurate comparison
     const diffTime = expiry.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
@@ -77,25 +80,37 @@ export function CustomerDashboard({
               </CardHeader>
 
               <CardContent>
-                {/* Classes Remaining - Large Display */}
-                <div className="bg-gray-50 rounded-xl p-6 mb-4 text-center">
-                  <p className="text-gray-700 text-sm font-medium mb-1">Classes Remaining</p>
-                  <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-brand-yellow text-5xl font-bold">
-                      {activeCard.classesRemaining}
-                    </span>
-                    <span className="text-gray-500 text-2xl">/ {activeCard.totalClasses}</span>
+                {/* Classes Remaining or Subscription Status */}
+                {activeCard.totalClasses === 0 ? (
+                  // Subscription card - show 1 Month Class Pass
+                  <div className="bg-gray-50 rounded-xl p-6 mb-4 text-center">
+                    <p className="text-brand-yellow text-xl font-bold whitespace-nowrap">
+                      1 Month <span className="text-gray-700">• Class Pass</span>
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  // Punch card - show remaining classes
+                  <>
+                    <div className="bg-gray-50 rounded-xl p-6 mb-4 text-center">
+                      <p className="text-gray-700 text-sm font-medium mb-1">Classes Remaining</p>
+                      <div className="flex items-baseline justify-center gap-2">
+                        <span className="text-brand-yellow text-5xl font-bold">
+                          {activeCard.classesRemaining}
+                        </span>
+                        <span className="text-gray-500 text-2xl">/ {activeCard.totalClasses}</span>
+                      </div>
+                    </div>
 
-                {/* Progress Bar */}
-                <div className="mb-4">
-                  <ProgressBar
-                    current={classesUsed}
-                    total={activeCard.totalClasses}
-                    showLabel={false}
-                  />
-                </div>
+                    {/* Progress Bar - only for punch cards */}
+                    <div className="mb-4">
+                      <ProgressBar
+                        current={classesUsed}
+                        total={activeCard.totalClasses}
+                        showLabel={false}
+                      />
+                    </div>
+                  </>
+                )}
 
                 {/* Expiration Info */}
                 <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4">
@@ -104,11 +119,17 @@ export function CustomerDashboard({
                     <div>
                       <p className="text-gray-700 text-xs font-medium">Expires</p>
                       <p className="text-brand-black font-semibold">
-                        {new Date(activeCard.expirationDate).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric'
-                        })}
+                        {(() => {
+                          // Parse date string directly to avoid timezone shifting
+                          // Date format: "2025-12-31" -> show as "Dec 31, 2025"
+                          const [year, month, day] = activeCard.expirationDate.split('-').map(Number);
+                          const dateForDisplay = new Date(year, month - 1, day); // month is 0-indexed
+                          return dateForDisplay.toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                          });
+                        })()}
                       </p>
                     </div>
                   </div>

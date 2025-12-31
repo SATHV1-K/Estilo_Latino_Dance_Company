@@ -88,12 +88,34 @@ export async function getFamilyMemberCards(familyMemberId: string): Promise<Punc
 }
 
 /**
+ * Get today's date in EST/EDT timezone for accurate expiration checks
+ */
+function getTodayDateString(): string {
+    // Use America/New_York timezone for the dance studio's location
+    const now = new Date();
+    const estOffset = now.toLocaleString('en-US', { timeZone: 'America/New_York' });
+    const estDate = new Date(estOffset);
+    const year = estDate.getFullYear();
+    const month = String(estDate.getMonth() + 1).padStart(2, '0');
+    const day = String(estDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+/**
  * Get active card for a user
+ * Handles both punch cards (classes > 0) and subscription cards (classes = 0)
  */
 export async function getActiveCard(
     userId?: string,
     familyMemberId?: string
 ): Promise<PunchCardWithDetails | null> {
+    const todayDate = getTodayDateString();
+
+    if (!userId && !familyMemberId) {
+        return null;
+    }
+
+    // Query for active cards - includes both punch cards and subscriptions
     let query = supabaseAdmin
         .from('punch_cards')
         .select(`
@@ -101,26 +123,35 @@ export async function getActiveCard(
       card_types (*)
     `)
         .eq('status', 'active')
-        .gt('classes_remaining', 0)
-        .gte('expiration_date', new Date().toISOString().split('T')[0]);
+        .gte('expiration_date', todayDate);
 
     if (userId) {
         query = query.eq('user_id', userId);
     } else if (familyMemberId) {
         query = query.eq('family_member_id', familyMemberId);
-    } else {
-        return null;
     }
 
     const { data: cards, error } = await query
-        .order('expiration_date', { ascending: true })
-        .limit(1);
+        .order('expiration_date', { ascending: true });
 
     if (error || !cards || cards.length === 0) {
         return null;
     }
 
-    const card = cards[0];
+    // Filter cards: subscription cards (classes = 0) OR punch cards with remaining classes
+    const activeCards = cards.filter((card: any) => {
+        const isSubscription = card.card_types?.card_category === 'subscription';
+        if (isSubscription) {
+            return true; // Subscriptions are always valid if not expired
+        }
+        return card.classes_remaining > 0; // Punch cards need remaining classes
+    });
+
+    if (activeCards.length === 0) {
+        return null;
+    }
+
+    const card = activeCards[0];
     return {
         ...card,
         card_type: card.card_types,

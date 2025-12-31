@@ -115,11 +115,18 @@ export async function checkIn(data: {
         throw new Error('No active punch card found. Customer needs to purchase a card.');
     }
 
-    // Use a transaction to deduct class and create check-in
-    // First deduct the class
-    await cardService.deductClass(activeCard.id);
+    // Check if this is a subscription card (unlimited check-ins, no class deduction)
+    const isSubscription = activeCard.card_type?.card_category === 'subscription';
+    let classesRemaining = activeCard.classes_remaining;
 
-    // Then create check-in record
+    if (!isSubscription) {
+        // Punch card: Deduct a class
+        await cardService.deductClass(activeCard.id);
+        classesRemaining = activeCard.classes_remaining - 1;
+    }
+    // Subscription: No class deduction, just record the check-in for attendance
+
+    // Create check-in record
     const { data: checkIn, error } = await supabaseAdmin
         .from('check_ins')
         .insert({
@@ -144,23 +151,24 @@ export async function checkIn(data: {
         ? `${punchedByUser.first_name} ${punchedByUser.last_name}`
         : 'Unknown';
 
-    const classesRemaining = activeCard.classes_remaining - 1;
-
-    // Send low balance alert if applicable (async, don't wait)
-    checkAndSendLowBalanceAlert(
-        userId,
-        familyMemberId,
-        classesRemaining,
-        activeCard.card_type?.name || 'Punch Card'
-    ).catch(err => console.error('Low balance alert error:', err));
-
-    // Send exhausted alert if card is now empty (async, don't wait)
-    if (classesRemaining === 0) {
-        checkAndSendExhaustedAlert(
+    // Only send low balance/exhausted alerts for punch cards (not subscriptions)
+    if (!isSubscription) {
+        // Send low balance alert if applicable (async, don't wait)
+        checkAndSendLowBalanceAlert(
             userId,
             familyMemberId,
+            classesRemaining,
             activeCard.card_type?.name || 'Punch Card'
-        ).catch(err => console.error('Exhausted alert error:', err));
+        ).catch(err => console.error('Low balance alert error:', err));
+
+        // Send exhausted alert if card is now empty (async, don't wait)
+        if (classesRemaining === 0) {
+            checkAndSendExhaustedAlert(
+                userId,
+                familyMemberId,
+                activeCard.card_type?.name || 'Punch Card'
+            ).catch(err => console.error('Exhausted alert error:', err));
+        }
     }
 
     return {
@@ -168,7 +176,7 @@ export async function checkIn(data: {
         person_name: personName,
         card_name: activeCard.card_type?.name || 'Unknown',
         punched_by_name: punchedByName,
-        classes_remaining: classesRemaining,
+        classes_remaining: isSubscription ? -1 : classesRemaining, // -1 indicates unlimited for subscriptions
     };
 }
 

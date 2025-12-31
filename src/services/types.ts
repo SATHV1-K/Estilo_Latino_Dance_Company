@@ -29,6 +29,8 @@ export interface PunchCard {
   isExpired: boolean;
 }
 
+export type CardCategory = 'punch_card' | 'subscription';
+
 export interface PunchCardOption {
   id: string;
   name: string;
@@ -37,6 +39,7 @@ export interface PunchCardOption {
   price: number;
   pricePerClass: number;
   description: string;
+  cardCategory?: CardCategory;
 }
 
 export interface CheckIn {
