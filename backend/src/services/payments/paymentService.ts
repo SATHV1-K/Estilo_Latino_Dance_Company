@@ -1,6 +1,7 @@
 import { Client, Environment, ApiError } from 'square';
 import { supabaseAdmin } from '../../shared/supabase';
 import { randomUUID } from 'crypto';
+import { sendPurchaseConfirmationEmail } from '../notifications/notificationService';
 
 // Initialize Square client
 const squareClient = new Client({
@@ -185,7 +186,31 @@ export async function processPayment(request: PaymentRequest): Promise<PaymentRe
 
         console.log('✅ Punch card created:', punchCard.id);
 
-        // 5. Record payment in database
+        // 5b. Send purchase confirmation email (async, don't block)
+        const { data: userEmail } = await supabaseAdmin
+            .from('users')
+            .select('email, check_in_code')
+            .eq('id', userId)
+            .single();
+
+        if (userEmail?.email) {
+            sendPurchaseConfirmationEmail(
+                userId,
+                `${firstName} ${lastName}`,
+                userEmail.email,
+                userEmail.check_in_code || 'N/A',
+                cardType.name,
+                cardType.classes,
+                punchCard.expiration_date,
+                totalCents / 100
+            ).then(() => {
+                console.log(`✅ Purchase confirmation email sent to ${userEmail.email}`);
+            }).catch(err => {
+                console.error('Error sending purchase confirmation email:', err);
+            });
+        }
+
+        // 6. Record payment in database
         const { error: paymentError } = await supabaseAdmin
             .from('payments')
             .insert({

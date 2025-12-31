@@ -3,7 +3,7 @@ import { parseQRCode } from '../../shared/qr';
 import { CheckIn, CheckInWithDetails, BirthdayPass, PaginatedResponse } from '../../shared/types';
 import * as cardService from '../cards/cardService';
 import * as userService from '../users/userService';
-import { checkAndSendLowBalanceAlert, sendBirthdayNotification } from '../notifications/notificationService';
+import { checkAndSendLowBalanceAlert, checkAndSendExhaustedAlert, sendBirthdayNotification } from '../notifications/notificationService';
 
 /**
  * Check in a user or family member
@@ -153,6 +153,15 @@ export async function checkIn(data: {
         classesRemaining,
         activeCard.card_type?.name || 'Punch Card'
     ).catch(err => console.error('Low balance alert error:', err));
+
+    // Send exhausted alert if card is now empty (async, don't wait)
+    if (classesRemaining === 0) {
+        checkAndSendExhaustedAlert(
+            userId,
+            familyMemberId,
+            activeCard.card_type?.name || 'Punch Card'
+        ).catch(err => console.error('Exhausted alert error:', err));
+    }
 
     return {
         ...checkIn,

@@ -558,6 +558,122 @@ export async function checkAndSendLowBalanceAlert(
 }
 
 // ============================================
+// CARD EXHAUSTED NOTIFICATION (0 classes remaining)
+// ============================================
+
+export async function sendExhaustedNotification(
+    userId: string,
+    userName: string,
+    userEmail: string,
+    cardName: string
+): Promise<boolean> {
+    try {
+        const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #ff6b6b, #ee5a5a); padding: 30px; text-align: center; }
+        .header h1 { color: #fff; margin: 0; }
+        .content { padding: 30px; background: #f9f9f9; }
+        .exhausted-box { background: #fff; border: 2px solid #ff6b6b; padding: 25px; border-radius: 12px; margin: 20px 0; text-align: center; }
+        .zero-count { font-size: 64px; font-weight: bold; color: #ff6b6b; }
+        .button { display: inline-block; padding: 15px 40px; background: #ffc700; color: #000; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; }
+        .footer { padding: 20px; text-align: center; color: #666; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎫 Card Exhausted</h1>
+        </div>
+        <div class="content">
+            <p>Hi <strong>${userName.split(' ')[0]}</strong>,</p>
+            
+            <div class="exhausted-box">
+                <p style="margin: 0;">Your <strong>${cardName}</strong> has been fully used!</p>
+                <p class="zero-count">0</p>
+                <p style="margin: 0;">classes remaining</p>
+            </div>
+            
+            <p>Great job using all your classes! 🎉 Ready to keep dancing? Purchase a new punch card to continue your dance journey with us.</p>
+            
+            <p style="text-align: center;">
+                <a href="#" class="button">Buy New Card</a>
+            </p>
+            
+            <p>We can't wait to see you on the dance floor again! 💃🕺</p>
+            
+            <p><em>The Estilo Latino Team</em></p>
+        </div>
+        <div class="footer">
+            <p>${STUDIO_NAME}<br>
+            📧 ${STUDIO_EMAIL}</p>
+        </div>
+    </div>
+</body>
+</html>`;
+
+        const subject = `🎫 Your ${cardName} is now exhausted - Time for a new card!`;
+        const success = await sendEmail(userEmail, subject, html);
+
+        if (success) {
+            console.log(`✅ Exhausted notification sent to ${userEmail}`);
+        }
+        return success;
+    } catch (error) {
+        console.error('❌ Error sending exhausted notification:', error);
+        return false;
+    }
+}
+
+/**
+ * Send exhausted card alert after a check-in uses the last class
+ */
+export async function checkAndSendExhaustedAlert(
+    userId: string | undefined,
+    familyMemberId: string | undefined,
+    cardName: string
+): Promise<void> {
+    try {
+        let email: string | null = null;
+        let userName = '';
+
+        if (userId) {
+            const user = await userService.getUserById(userId);
+            if (user) {
+                email = user.email;
+                userName = `${user.first_name} ${user.last_name}`;
+            }
+        } else if (familyMemberId) {
+            // For family members, get parent's email
+            const member = await userService.getFamilyMemberById(familyMemberId);
+            if (member) {
+                const parent = await userService.getUserById(member.primary_user_id);
+                if (parent) {
+                    email = parent.email;
+                    userName = `${member.first_name} ${member.last_name}`;
+                }
+            }
+        }
+
+        if (email && userName) {
+            await sendExhaustedNotification(
+                userId || familyMemberId || '',
+                userName,
+                email,
+                cardName
+            );
+        }
+    } catch (error) {
+        console.error('Error checking/sending exhausted alert:', error);
+    }
+}
+
+// ============================================
 // PURCHASE CONFIRMATION EMAIL
 // ============================================
 
