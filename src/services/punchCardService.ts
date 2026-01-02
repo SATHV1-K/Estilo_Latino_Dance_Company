@@ -54,10 +54,15 @@ function mapApiPunchCard(card: PunchCardApi): PunchCard {
   const now = new Date();
   const todayStr = now.toLocaleDateString('en-CA'); // Format: YYYY-MM-DD in local timezone
 
+  // Show "Admin Pass" for cards created by admin, otherwise use card type name
+  const cardName = card.payment_method === 'admin_created'
+    ? 'Admin Pass'
+    : (card.card_type?.name || 'Unknown');
+
   return {
     id: card.id,
     userId: card.user_id || card.family_member_id || '',
-    name: card.card_type?.name || 'Unknown',
+    name: cardName,
     totalClasses: card.total_classes,
     classesRemaining: card.classes_remaining,
     expirationDate: card.expiration_date,

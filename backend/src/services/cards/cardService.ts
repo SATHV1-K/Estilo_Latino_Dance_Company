@@ -103,7 +103,8 @@ function getTodayDateString(): string {
 
 /**
  * Get active card for a user
- * Handles both punch cards (classes > 0) and subscription cards (classes = 0)
+ * PRIORITY: Punch cards with remaining classes > Subscription cards
+ * This ensures admin-created passes are used before subscription cards
  */
 export async function getActiveCard(
     userId?: string,
@@ -138,23 +139,30 @@ export async function getActiveCard(
         return null;
     }
 
-    // Filter cards: subscription cards (classes = 0) OR punch cards with remaining classes
-    const activeCards = cards.filter((card: any) => {
+    // Separate punch cards (with remaining classes) from subscriptions
+    const punchCards: any[] = [];
+    const subscriptionCards: any[] = [];
+
+    for (const card of cards) {
         const isSubscription = card.card_types?.card_category === 'subscription';
         if (isSubscription) {
-            return true; // Subscriptions are always valid if not expired
+            subscriptionCards.push(card);
+        } else if (card.classes_remaining > 0) {
+            punchCards.push(card);
         }
-        return card.classes_remaining > 0; // Punch cards need remaining classes
-    });
+    }
 
-    if (activeCards.length === 0) {
+    // PRIORITY: Return punch card first if available, then subscription
+    // This ensures admin-created passes are used before subscriptions
+    const selectedCard = punchCards.length > 0 ? punchCards[0] : subscriptionCards[0];
+
+    if (!selectedCard) {
         return null;
     }
 
-    const card = activeCards[0];
     return {
-        ...card,
-        card_type: card.card_types,
+        ...selectedCard,
+        card_type: selectedCard.card_types,
         card_types: undefined,
         owner_type: userId ? 'user' : 'family_member',
     };
@@ -306,15 +314,26 @@ export async function adminCreatePass(data: {
     amount_paid: number;
     admin_id: string;
 }): Promise<PunchCard> {
-    // Find or create a custom card type for admin passes
-    let cardType = await getCardTypes().then(types =>
-        types.find(t => t.name === 'Admin Pass')
-    );
+    const types = await getCardTypes();
 
-    // If no admin pass card type exists, use the closest match
+    // Find a suitable card type for admin passes (must be punch_card, NOT subscription)
+    let cardType = types.find(t => t.name === 'Admin Pass' && t.card_category !== 'subscription');
+
+    // Fallback to common punch card types (not subscription)
     if (!cardType) {
-        const types = await getCardTypes();
-        // Use single class as base, or first available
+        cardType = types.find(t =>
+            t.card_category !== 'subscription' &&
+            (t.name.includes('12 Class') || t.name.includes('5 Class') || t.name === 'Salsa & Bachata')
+        );
+    }
+
+    // Last resort: use any non-subscription card type
+    if (!cardType) {
+        cardType = types.find(t => t.card_category !== 'subscription');
+    }
+
+    // If still no type found, use first available (shouldn't happen)
+    if (!cardType) {
         cardType = types[0];
     }
 

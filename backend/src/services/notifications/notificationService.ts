@@ -79,7 +79,7 @@ export async function sendLowBalanceAlert(
             <p>Don't let your dance journey stop! Purchase a new punch card to keep learning and grooving with us.</p>
             
             <p style="text-align: center;">
-                <a href="#" class="button">Buy New Card</a>
+                <a href="https://payments.estilolatinodance.com" class="button">Buy New Card</a>
             </p>
             
             <p>We can't wait to see you on the dance floor! 💃🕺</p>
@@ -226,7 +226,7 @@ export async function sendExpiredNotification(
             <p>But don't worry! You can purchase a new punch card anytime to continue your dance journey with us.</p>
             
             <p style="text-align: center;">
-                <a href="#" class="button">Get a New Card</a>
+                <a href="https://payments.estilolatinodance.com" class="button">Get a New Card</a>
             </p>
             
             <p>We hope to see you back on the dance floor soon! 💃</p>
@@ -602,7 +602,7 @@ export async function sendExhaustedNotification(
             <p>Great job using all your classes! 🎉 Ready to keep dancing? Purchase a new punch card to continue your dance journey with us.</p>
             
             <p style="text-align: center;">
-                <a href="#" class="button">Buy New Card</a>
+                <a href="https://payments.estilolatinodance.com" class="button">Buy New Card</a>
             </p>
             
             <p>We can't wait to see you on the dance floor again! 💃🕺</p>

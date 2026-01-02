@@ -264,11 +264,16 @@ export function AdminModify() {
                       <div className="flex justify-between text-xs mt-2">
                         <span className="text-gray-400">Expires:</span>
                         <span className="text-gray-300">
-                          {new Date(expirationDate).toLocaleDateString('en-US', {
-                            month: 'long',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
+                          {(() => {
+                            // Parse date string directly to avoid timezone shifting
+                            const [year, month, day] = expirationDate.split('-').map(Number);
+                            const dateForDisplay = new Date(year, month - 1, day);
+                            return dateForDisplay.toLocaleDateString('en-US', {
+                              month: 'long',
+                              day: 'numeric',
+                              year: 'numeric'
+                            });
+                          })()}
                         </span>
                       </div>
                     </div>
