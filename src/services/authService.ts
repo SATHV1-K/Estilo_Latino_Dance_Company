@@ -126,6 +126,21 @@ class AuthService {
     return this.currentUser;
   }
 
+  // Check if there's an access token stored
+  hasValidToken(): boolean {
+    return apiClient.hasToken();
+  }
+
+  // Validate session with server - returns true if token is still valid
+  async validateSession(): Promise<boolean> {
+    try {
+      const response = await apiClient.get<ApiResponse<AuthResponse['user']>>('/api/auth/me');
+      return response.success && !!response.data;
+    } catch {
+      return false;
+    }
+  }
+
   async refreshCurrentUser(): Promise<User | null> {
     try {
       const response = await apiClient.get<ApiResponse<AuthResponse['user']>>('/api/auth/me');

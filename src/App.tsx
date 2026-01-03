@@ -66,22 +66,40 @@ export default function App() {
   }, []);
 
   // Restore user session on page load (prevents logout on refresh)
+  // Only restore if there's a valid token - validates with server
   useEffect(() => {
-    const savedUser = authService.getCurrentUser();
-    if (savedUser && !currentUser) {
-      setCurrentUser(savedUser);
-      // Navigate to appropriate dashboard based on role
-      if (savedUser.role === 'customer') {
-        setCurrentScreen('customer-dashboard');
-        setActiveTab('home');
-      } else if (savedUser.role === 'staff') {
-        setCurrentScreen('staff-punch');
-        setActiveTab('home');
-      } else if (savedUser.role === 'admin') {
-        setCurrentScreen('admin-punch');
-        setActiveTab('home');
+    const restoreSession = async () => {
+      const savedUser = authService.getCurrentUser();
+      const hasToken = authService.hasValidToken();
+
+      if (savedUser && hasToken && !currentUser) {
+        try {
+          // Validate token with server before restoring
+          const isValid = await authService.validateSession();
+          if (isValid) {
+            setCurrentUser(savedUser);
+            // Navigate to appropriate dashboard based on role
+            if (savedUser.role === 'customer') {
+              setCurrentScreen('customer-dashboard');
+              setActiveTab('home');
+            } else if (savedUser.role === 'staff') {
+              setCurrentScreen('staff-punch');
+              setActiveTab('home');
+            } else if (savedUser.role === 'admin') {
+              setCurrentScreen('admin-punch');
+              setActiveTab('home');
+            }
+          } else {
+            // Token invalid, clear saved data
+            authService.logout();
+          }
+        } catch {
+          // Validation failed, clear saved data
+          authService.logout();
+        }
       }
-    }
+    };
+    restoreSession();
   }, []);
 
 
