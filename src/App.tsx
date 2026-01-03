@@ -53,6 +53,22 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [resetToken, setResetToken] = useState<string | null>(null);
 
+  // Force logout all existing sessions - increment this version to force logout
+  // This clears stale sessions when deploying security fixes
+  const REQUIRED_SESSION_VERSION = '2'; // Increment to force all users to re-login
+
+  useEffect(() => {
+    const currentVersion = localStorage.getItem('sessionVersion');
+    if (currentVersion !== REQUIRED_SESSION_VERSION) {
+      // Clear all session data
+      localStorage.removeItem('currentUser');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      localStorage.setItem('sessionVersion', REQUIRED_SESSION_VERSION);
+      console.log('Session cleared due to version update');
+    }
+  }, []);
+
   // Check for reset password token in URL on load
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
