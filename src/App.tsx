@@ -65,6 +65,25 @@ export default function App() {
     }
   }, []);
 
+  // Restore user session on page load (prevents logout on refresh)
+  useEffect(() => {
+    const savedUser = authService.getCurrentUser();
+    if (savedUser && !currentUser) {
+      setCurrentUser(savedUser);
+      // Navigate to appropriate dashboard based on role
+      if (savedUser.role === 'customer') {
+        setCurrentScreen('customer-dashboard');
+        setActiveTab('home');
+      } else if (savedUser.role === 'staff') {
+        setCurrentScreen('staff-punch');
+        setActiveTab('home');
+      } else if (savedUser.role === 'admin') {
+        setCurrentScreen('admin-punch');
+        setActiveTab('home');
+      }
+    }
+  }, []);
+
 
   // Load user's active card when user logs in
   useEffect(() => {
@@ -268,6 +287,10 @@ export default function App() {
         case 'history':
           setCurrentScreen('staff-history');
           break;
+        case 'profile':
+          // Logout for staff
+          handleLogout();
+          break;
       }
     } else if (currentUser.role === 'admin') {
       switch (tab) {
@@ -282,6 +305,10 @@ export default function App() {
           break;
         case 'admin':
           setCurrentScreen('admin-dashboard');
+          break;
+        case 'profile':
+          // Logout for admin
+          handleLogout();
           break;
       }
     }

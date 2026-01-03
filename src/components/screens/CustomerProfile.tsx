@@ -171,7 +171,7 @@ export function CustomerProfile({ user, onLogout }: CustomerProfileProps) {
                 Change Password
               </Button>
               <Button
-                variant="danger"
+                variant="secondary"
                 className="w-full justify-start"
                 onClick={onLogout}
               >
