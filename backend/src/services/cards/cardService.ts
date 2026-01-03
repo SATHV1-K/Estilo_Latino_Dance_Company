@@ -144,7 +144,12 @@ export async function getActiveCard(
     const subscriptionCards: any[] = [];
 
     for (const card of cards) {
-        const isSubscription = card.card_types?.card_category === 'subscription';
+        // Detect subscription by EITHER card_category OR total_classes = 0
+        // (handles NULL card_category case)
+        const isSubscription =
+            card.card_types?.card_category === 'subscription' ||
+            card.total_classes === 0;
+
         if (isSubscription) {
             subscriptionCards.push(card);
         } else if (card.classes_remaining > 0) {
@@ -316,20 +321,25 @@ export async function adminCreatePass(data: {
 }): Promise<PunchCard> {
     const types = await getCardTypes();
 
+    // Helper to check if a card type is a valid punch card (NOT a subscription)
+    // Subscriptions have either card_category = 'subscription' OR classes = 0
+    const isPunchCardType = (t: any) =>
+        t.card_category !== 'subscription' && t.classes > 0;
+
     // Find a suitable card type for admin passes (must be punch_card, NOT subscription)
-    let cardType = types.find(t => t.name === 'Admin Pass' && t.card_category !== 'subscription');
+    let cardType = types.find(t => t.name === 'Admin Pass' && isPunchCardType(t));
 
     // Fallback to common punch card types (not subscription)
     if (!cardType) {
         cardType = types.find(t =>
-            t.card_category !== 'subscription' &&
+            isPunchCardType(t) &&
             (t.name.includes('12 Class') || t.name.includes('5 Class') || t.name === 'Salsa & Bachata')
         );
     }
 
     // Last resort: use any non-subscription card type
     if (!cardType) {
-        cardType = types.find(t => t.card_category !== 'subscription');
+        cardType = types.find(t => isPunchCardType(t));
     }
 
     // If still no type found, use first available (shouldn't happen)

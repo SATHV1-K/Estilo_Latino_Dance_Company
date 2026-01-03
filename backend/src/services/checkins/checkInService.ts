@@ -116,7 +116,10 @@ export async function checkIn(data: {
     }
 
     // Check if this is a subscription card (unlimited check-ins, no class deduction)
-    const isSubscription = activeCard.card_type?.card_category === 'subscription';
+    // Detect by EITHER card_category OR total_classes = 0 (handles NULL card_category)
+    const isSubscription =
+        activeCard.card_type?.card_category === 'subscription' ||
+        activeCard.total_classes === 0;
     let classesRemaining = activeCard.classes_remaining;
 
     if (!isSubscription) {
