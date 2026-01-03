@@ -4,9 +4,28 @@ import * as userService from '../users/userService';
 import { sendPurchaseConfirmationEmail } from '../notifications/notificationService';
 
 /**
- * Get all available card types
+ * Get all available card types (excludes Admin Pass which is for internal use only)
+ * This is used for customer purchase - Admin Pass should not be purchasable
  */
 export async function getCardTypes(): Promise<CardType[]> {
+    const { data: cardTypes, error } = await supabaseAdmin
+        .from('card_types')
+        .select('*')
+        .eq('is_active', true)
+        .neq('name', 'Admin Pass')  // Hide Admin Pass from customer purchase
+        .order('classes', { ascending: true });
+
+    if (error) {
+        throw new Error('Failed to fetch card types');
+    }
+
+    return cardTypes || [];
+}
+
+/**
+ * Get ALL card types including Admin Pass (for internal admin functions)
+ */
+async function getAllCardTypesIncludingAdmin(): Promise<CardType[]> {
     const { data: cardTypes, error } = await supabaseAdmin
         .from('card_types')
         .select('*')
@@ -319,7 +338,7 @@ export async function adminCreatePass(data: {
     amount_paid: number;
     admin_id: string;
 }): Promise<PunchCard> {
-    const types = await getCardTypes();
+    const types = await getAllCardTypesIncludingAdmin();
 
     // Helper to check if a card type is a valid punch card (NOT a subscription)
     // Subscriptions have either card_category = 'subscription' OR classes = 0
